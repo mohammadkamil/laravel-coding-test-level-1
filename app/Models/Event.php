@@ -10,7 +10,10 @@ class Event extends Model
 {
     use HasFactory;
     public $incrementing = false;
-
+    protected $fillable = [
+        'name',
+        'slug',
+    ];
     protected static function boot()
     {
         parent::boot();
