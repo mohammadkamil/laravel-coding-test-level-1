@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\EventController;
+use App\Models\Event;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -17,14 +19,23 @@ use Inertia\Inertia;
 */
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
+    $events = Event::query()
+    ->when(Request::input('search'), function ($query, $search) {
+        $query->where('name', 'like', '%' . $search . '%')
+            ->OrWhere('slug', 'like', '%' . $search . '%');
+    })->paginate(10);
+// dd($events);
+return Inertia::render('Welcome', ['events' => $events, 'filters' => Request::only(['search'])]);
+})->name('welcome');
+Route::get('show/{id}', function ($id =null) {
+
+    $event = Event::find($id);
+    // dd($event);
+    return Inertia::render('Event', [
+        'event' => $event
     ]);
-});
-Route::resource('events', EventController::class);
+})->name('show');
+Route::resource('events', EventController::class)->middleware('auth');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
